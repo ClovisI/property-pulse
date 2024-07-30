@@ -7,7 +7,7 @@ import {
 const PropertySchema = new Schema({
   owner: {
     type: Schema.Types.ObjectId,
-    ref: "Property",
+    ref: "User",
     required: true
   },
   name: {
@@ -48,7 +48,7 @@ const PropertySchema = new Schema({
     required: true
   },
   amenities: [{
-    type: String,
+    type: String
   }],
   rates: {
     nightly: {
