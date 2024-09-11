@@ -1,6 +1,7 @@
 'use client';
 import {
-  useState
+  useState,
+  useEffect
 } from "react";
 import {
   usePathname
@@ -12,13 +13,26 @@ import profileDefault from "@/assets/images/profile.png";
 import {
   FaGoogle
 } from "react-icons/fa";
+import { signIn, signOut, useSession, getProviders } from "next-auth/react";
 
 const Navbar = () => {
+  const { data: session } = useSession();
+  const profileImage = session?.user?.image;
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [providers, setProviders] = useState(false);
 
   const pathname = usePathname();
+
+  useEffect(() => {
+    const setAuthProviders = async() => {
+      const res = await getProviders();
+      setProviders(res);
+    };
+
+    setAuthProviders();
+  }, []);
 
   return (
     <nav className="bg-blue-700 border-b border-blue-500">
@@ -83,7 +97,7 @@ const Navbar = () => {
                   ` }
                   >Properties
                 </Link>
-                { isLoggedIn && (
+                { session && (
                   <Link
                     href="/properties/add"
                     className={`${pathname === "/properties/add" ? "bg-black" : ""}
@@ -97,20 +111,22 @@ const Navbar = () => {
             </div>
           </div>
 
-          { !isLoggedIn && (
+          { !session && (
             <div className="hidden md:block md:ml-6">
               <div className="flex items-center">
-                <button
-                  className="flex items-center text-white bg-gray-700 hover:bg-gray-900 hover:text-white rounded-md px-3 py-2"
-                >
-                  <FaGoogle className="text-white mr-2"/>
-                  <span>Login or Register</span>
-                </button>
+                { providers && Object.values(providers).map((provider, index) =>(
+                  <button onClick={() => signIn(provider.id)} key={index}
+                    className="flex items-center text-white bg-gray-700 hover:bg-gray-900 hover:text-white rounded-md px-3 py-2"
+                  >
+                    <FaGoogle className="text-white mr-2"/>
+                    <span>Login or Register</span>
+                  </button>
+                )) }
               </div>
             </div>
           )}
 
-          { isLoggedIn && (
+          { session && (
             <div
               className="absolute inset-y-0 right-0 flex items-center pr-2 md:static md:inset-auto md:ml-6 md:pr-0"
             >
@@ -125,13 +141,13 @@ const Navbar = () => {
                     className="h-6 w-6"
                     fill="none"
                     viewBox="0 0 24 24"
-                    stroke-width="1.5"
+                    strokeWidth="1.5"
                     stroke="currentColor"
                     aria-hidden="true"
                   >
                     <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                       d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
                     />
                   </svg>
@@ -158,8 +174,10 @@ const Navbar = () => {
                     <span className="sr-only">Open user menu</span>
                     <Image
                       className="h-8 w-8 rounded-full"
-                      src={profileDefault}
-                      alt=""
+                      src={profileImage || profileDefault}
+                      width={40}
+                      height={40}
+                      alt="Profile Image"
                     />
                   </button>
                 </div>
@@ -179,6 +197,9 @@ const Navbar = () => {
                       role="menuitem"
                       tabIndex="-1"
                       id="user-menu-item-0"
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                      }}
                       >
                       Your Profile
                     </Link>
@@ -188,9 +209,16 @@ const Navbar = () => {
                       role="menuitem"
                       tabIndex="-1"
                       id="user-menu-item-2"
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                      }}
                       >Saved Properties
                     </Link>
                     <button
+                      onClick={() =>{
+                        setIsProfileMenuOpen(false);
+                        signOut();
+                      }}
                       className="block px-4 py-2 text-sm text-gray-700"
                       role="menuitem"
                       tabIndex="-1"
@@ -218,20 +246,23 @@ const Navbar = () => {
               className="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-base font-medium"
               >Properties
             </Link>
-            {isLoggedIn && (
+            {session && (
                         <Link
                           href="/properties/add"
                           className="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-base font-medium"
                           >Add Property
                         </Link>
                       )}
-            { !isLoggedIn && (
-              <button
-                className="flex items-center text-white bg-gray-700 hover:bg-gray-900 hover:text-white rounded-md px-3 py-2 my-4"
-              >
-                <span>Login or Register</span>
-              </button>
-            )}
+            { !session &&
+              providers && Object.values(providers).map((provider, index) =>(
+                <button
+                  onClick={() => signIn(provider.id)} key={index}
+                  className="flex items-center text-white bg-gray-700 hover:bg-gray-900 hover:text-white rounded-md px-3 py-2"
+                >
+                  <span>Login or Register</span>
+                </button>
+              ))
+            }
           </div>
         </div>
       )}
