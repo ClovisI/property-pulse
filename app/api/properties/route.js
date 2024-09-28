@@ -94,12 +94,14 @@ export const POST = async (request) => {
 
     // Add uploaded images to the propertyData object
     propertyData.images = uploadedImages;
-    }
+  }
 
     const newProperty = new Property(propertyData);
     await newProperty.save();
 
-    return Response.redirect(`${process.env.NEXTAUTH_URL}/properties/${newProperty._id}`);
+    return Response.redirect(
+      `${process.env.NEXTAUTH_URL}/properties/${newProperty._id}`
+    );
 
     // return new Response(JSON.stringify({message: "Success"}),
     // {status: 200});
